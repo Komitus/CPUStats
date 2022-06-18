@@ -1,0 +1,13 @@
+{
+    "files.associations": {
+        "*.ypp": "cpp",
+        "*.l": "cpp",
+        "*.pl": "prolog",
+        "pthread.h": "c",
+        "stdlib.h": "c",
+        "*.tcc": "c",
+        "string.h": "c",
+        "header.h": "c",
+        "errno.h": "c"
+    }
+}
