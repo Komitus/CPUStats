@@ -4,10 +4,11 @@
 #define NUM_OF_REQ_FIELDS 8
 #define MAX_LINE_LENGTH 1024
 #define STATS_FILENAME "/proc/stat"
+#define NUM_OF_THREADS 4
 
 typedef struct CoreStats
 {
-    char core_num[255];
+    int core_num;
     unsigned long user;
     unsigned long nice;
     unsigned long system;
@@ -17,23 +18,21 @@ typedef struct CoreStats
     unsigned long softirq;
 } CoreStats;
 
-extern unsigned short num_of_cores; // i could copy it for every thread but what for?
-                                    // i assing this once, then no modifications
-
 /**
  * @brief Get the num of cores
- *
+ * no SOLID (using readfile()) bcs it would add overhead
  * @return unsigned short - num of cores + 1
  *  (for 4 core cpu its 5) - (+1) is bcs for general stats
  */
 unsigned short get_num_of_cores();
 
 /**
- * @brief reader function - count number of cpus and then continously
- * read "/proc/stat" and update varible which analyzer handles
+ * @brief reader function - continously read "/proc/stat"
+ * and update varible which analyzer handles
  * @return void* - communicate error if occured
  */
 void *reader();
-// void printCpuStats(CoreStats *CoreStats);
+
+
 
 #endif
