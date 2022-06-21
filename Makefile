@@ -1,35 +1,48 @@
-.PHONY: all clean remove run
+TARGET   := main.out
 
-TARGET   = main.out
-CC       = gcc
-CFLAGS   = -std=c99 -Wall -Wextra -pthread
+CC       := gcc
+CFLAGS   := -std=c99 -Wall -Wextra -pthread
 
-LINKER   = gcc 
-LFLAGS   = -Wall -lm -pthread
+LINKER   := gcc 
+LFLAGS   := -Wall -lm -pthread
 
-SRCDIR   = src
-OBJDIR   = obj
-BINDIR   = bin
+PROJECT_DIR := $(shell pwd)
+
+BINDIR   := $(PROJECT_DIR)/bin
+INCDIR   := $(PROJECT_DIR)/inc
+SRCDIR   := $(PROJECT_DIR)/src
+OBJDIR   := $(PROJECT_DIR)/obj
 SOURCES  := $(wildcard $(SRCDIR)/*.c)
 OBJECTS  := $(SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o)
-rm       = rm -f
+HEADERS  := $(foreach d, $(INCDIR), -I$d)
+
+VERBOSE = 0
+
+ifeq ($(VERBOSE),1)
+  Q =
+else
+  Q = @
+endif
+
+define print_info
+	@echo "[$(1)]        $(2)"
+endef
+
+# Was trying to do multiple folders but i ended up having many Makefiles
 
 all: $(BINDIR)/$(TARGET)
 
 $(BINDIR)/$(TARGET): $(OBJECTS)
-	@$(LINKER) $(LFLAGS) $(OBJECTS) -o $@
-	@echo "Linking complete!"
+	$(call print_info,LINK, $<)
+	$(Q)$(LINKER) $(LFLAGS) $(OBJECTS) -o $@
 
 $(OBJECTS): $(OBJDIR)/%.o : $(SRCDIR)/%.c
-	@$(CC) $(CFLAGS) -c $< -o $@
-	@echo $<" compiled successfully!"
+	$(Q)$(CC) $(HEADERS) $(CFLAGS) -c $< -o $@
+	$(call print_info,OBJ, $@)
 
 clean:
-	@$(rm) $(wildcard $(OBJDIR)/*.o)
-	@echo "Cleanup complete!"
+	$(Q)echo CLEANING
+	$(Q)$(RM) $(wildcard $(OBJDIR)/*.o)
 
 remove: clean
-	@$(rm) $(BINDIR)/$(TARGET)
-	@echo "Executable removed!"
-
-
+	$(Q)$(RM) $(BINDIR)/$(TARGET)

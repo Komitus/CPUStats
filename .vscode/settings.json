@@ -8,6 +8,10 @@
         "*.tcc": "c",
         "string.h": "c",
         "header.h": "c",
-        "errno.h": "c"
+        "errno.h": "c",
+        "ring_buffer.h": "c",
+        "chrono": "c",
+        "unistd.h": "c",
+        "threads_utils.h": "c"
     }
 }
