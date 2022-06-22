@@ -5,9 +5,9 @@
 #include <pthread.h>
 
 /**
- * @brief ring_buffer module
+ * @brief RingBuffer module
  */
-typedef struct ring_buffer
+typedef struct RingBuffer
 {
     void *buffer;
     void *buffer_end; 
@@ -16,12 +16,26 @@ typedef struct ring_buffer
     size_t data_size;
     void *head;
     void *tail;
-} ring_buffer;
+} RingBuffer;
 
-int rb_init(ring_buffer *rb, size_t max_entries, size_t data_size);
-void rb_free(ring_buffer *rb);
-void rb_push_back(ring_buffer *rb, const void *item);
-int rb_pop_front(ring_buffer *rb, void *item);
+int rb_init(RingBuffer *rb, size_t max_entries, size_t data_size);
+void rb_free(RingBuffer *rb);
+/**
+ * @brief Pushes item to ring buffer,
+ * overwrite the oldest item
+ * @param rb - ring buffer
+ * @param item  - item to push, its copied
+ */
+void rb_push_back(RingBuffer *rb, const void *item);
+/**
+ * @brief Pop item from ring buffer
+ * 
+ * @param rb 
+ * @param item pointer to the element to which the oldest item 
+ * is to be copied
+ * @return int status - return -1 if empty
+ */
+int rb_pop_front(RingBuffer *rb, void *item);
 
 int test_ring_buffer_strings();
 int test_ring_buffer_uints();

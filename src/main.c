@@ -8,58 +8,66 @@
 #include "threads_utils.h"
 
 unsigned short num_of_cores;
-#define NUM_OF_THREADS 2
+
+#define MAX_BUFF_ENTRIES 15
+
+#define NUM_OF_THREADS 3
+#define READER_TH_NUM 0
+#define ANALYST_TH_NUM 1
+#define PRINTER_TH_NUM 2
+
 // int argc, char *argv[]
 int main()
-{   
-    unsigned short num_of_cores = get_num_of_cores();
+{
+    int num_of_cores = get_num_of_cores();
 
-    thread_struct thread_structs[NUM_OF_THREADS];
-    th_ring_buffer *th_rb = malloc(sizeof(th_ring_buffer));
-    ring_buffer *rb =  malloc(sizeof(ring_buffer));
-    th_rb->rb = rb;
-    th_rb_init(th_rb, 15, sizeof(char) * MAX_LINE_LENGTH * num_of_cores);
+    if (num_of_cores <= 0)
+    {
+        err(EXIT_FAILURE, "Cannot get number of cores\n");
+    }
 
-    for (int i = 0; i < NUM_OF_THREADS; i++)
+    printf("Number of cores: %d\n", num_of_cores);
+
+    // ThreadStruct thread_structs[NUM_OF_THREADS];
+    ThreadStruct thread_structs[NUM_OF_THREADS];
+    ThreadedRingBuffer th_rb_for_reading;
+    ThreadedRingBuffer th_rb_for_printing;
+
+    th_rb_init(&th_rb_for_reading, MAX_BUFF_ENTRIES, sizeof(char) * MAX_LINE_LENGTH * (num_of_cores + 1));
+    th_rb_init(&th_rb_for_printing, MAX_BUFF_ENTRIES, sizeof(double) * (num_of_cores + 1));
+
+    for (unsigned short i = 0; i < NUM_OF_THREADS; i++)
     {
         thread_structs[i].num_of_cores = num_of_cores;
-        thread_structs[i].th_rb = th_rb;
     }
 
-    int *err_num = malloc(sizeof *err_num);
-    *err_num = 0;
+    thread_structs[READER_TH_NUM].th_rbs = malloc(sizeof(ThreadedRingBuffer *));
+    thread_structs[READER_TH_NUM].th_rbs[0] = &th_rb_for_reading;
 
-    pthread_t reader_th;
-    //pthread_t analyst_th;
-    
-    if (pthread_create(&reader_th, NULL, &reader, &thread_structs[0]) != 0)
+    thread_structs[ANALYST_TH_NUM].th_rbs = malloc(sizeof(ThreadedRingBuffer *) * 2);
+    thread_structs[ANALYST_TH_NUM].th_rbs[0] = &th_rb_for_reading;
+    thread_structs[ANALYST_TH_NUM].th_rbs[1] = &th_rb_for_printing;
+
+    thread_structs[PRINTER_TH_NUM].th_rbs = malloc(sizeof(ThreadedRingBuffer *));
+    thread_structs[PRINTER_TH_NUM].th_rbs[0] = &th_rb_for_printing;
+
+    pthread_t reader_th, analyst_th, printer_th;
+
+    if (pthread_create(&reader_th, NULL, &reader, &thread_structs[READER_TH_NUM]) != 0)
     {
-        fprintf(stderr, "Error while creating thread, code: %d\n", errno);
+        fprintf(stderr, "Error while creating thread \n");
     }
 
-    /*
-    if (pthread_create(&analyst_th, NULL, &analyst, &thread_structs[1]) != 0)
+    if (pthread_create(&analyst_th, NULL, &analyst, &thread_structs[ANALYST_TH_NUM]) != 0)
     {
-        fprintf(stderr, "Error while creating thread, code: %d\n", errno);
-    }*/
-    
-    if (pthread_join(reader_th, (void **)&err_num))
-    {
-        fprintf(stderr, "Error while joining thread, code: %d\n", errno);
-    }
-    /*
-    if (pthread_join(analyst_th, (void **)&err_num))
-    {
-        fprintf(stderr, "Error while joining thread, code: %d\n", errno);
-    }
-    */
-
-    if (*err_num != 0)
-    {
-        fprintf(stderr, "Error occured, code: %d\n", *err_num);
+        fprintf(stderr, "Error while creating thread\n");
     }
 
-    free(err_num);
+    if (pthread_create(&printer_th, NULL, &printer, &thread_structs[PRINTER_TH_NUM]) != 0)
+    {
+        fprintf(stderr, "Error while creating thread\n");
+    }
 
+    pthread_exit(NULL);
     return 0;
 }

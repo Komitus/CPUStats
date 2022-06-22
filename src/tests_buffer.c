@@ -12,7 +12,7 @@ int test_ring_buffer_uints(){
     const unsigned int max_entries = 1000;
     const unsigned int num_of_pops = max_entries;
 
-    ring_buffer rb;
+    RingBuffer rb;
  
     rb_init(&rb, max_entries, sizeof(unsigned int));
 
@@ -42,7 +42,7 @@ int test_ring_buffer_strings(){
     const unsigned int num_of_pops = 400;
     const unsigned int max_entries = 1000;
 
-    ring_buffer rb;
+    RingBuffer rb;
     const size_t buff_size = sizeof(char) * MAX_LINE_LENGTH * 5;
     rb_init(&rb, max_entries, buff_size);
 
@@ -58,7 +58,8 @@ int test_ring_buffer_strings(){
     printf("Pushed %d times\n", i);
     assert(i == num_of_pushes);
 
-    unsigned garbage = 0;
+    unsigned short num_of_cores = get_num_of_cores(); 
+    CoreStats cpu_stats[num_of_cores];
 
     for(i = 0; i< num_of_pops; i++){
         rb_pop_front(&rb, buffer);
@@ -71,11 +72,7 @@ int test_ring_buffer_strings(){
         //printf("Counter: %ld\tBuff_size: %ld\n", j, buff_size);
 
         assert(j == buff_size);
-        assert(sscanf(buffer, "cpu %u %u %u %u %u %u %u %u %u %u",
-               &garbage, &garbage, &garbage,
-               &garbage, &garbage, &garbage,
-               &garbage,
-               &garbage, &garbage, &garbage) == 10);           
+        assert(parse_to_struct(buffer, cpu_stats, num_of_cores) == 0);          
     }
 
     assert(i == num_of_pops);

@@ -6,9 +6,8 @@
 
 #include <th_ring_buffer.h>
 
-typedef struct core_stats
+typedef struct CoreStats
 {
-    int core_num;
     unsigned int user;
     unsigned int nice;
     unsigned int system;
@@ -16,13 +15,15 @@ typedef struct core_stats
     unsigned int iowait;
     unsigned int irq;
     unsigned int softirq;
-} core_stats;
+    unsigned int steal;
+} CoreStats;
 
-typedef struct {
+typedef struct ThreadStruct{
     //Or whatever information that you need
     unsigned int short num_of_cores;
-    th_ring_buffer *th_rb;
-} thread_struct;
+    ThreadedRingBuffer **th_rbs;
+
+} ThreadStruct;
 
 
 /**
@@ -31,17 +32,20 @@ typedef struct {
  * @return unsigned int short - num of cores + 1
  *  (for 4 core cpu its 5) - (+1) is bcs for general stats
  */
-unsigned int short get_num_of_cores();
-int read_file(char *buffer, const size_t buffer_size, char *filename);
+int get_num_of_cores();
 
 /**
  * @brief  reader function - continously read "/proc/stat"
  * and update varible which analyzer handles
- * @param __thread_struct @see{thread_struct}
+ * @param __thread_struct @see{ThreadStruct}
  * @return void* - communicate error if occured
  */
-void *reader(void *__thread_struct);
-void *analyst(void *__thread_struct);
+void *reader(void *arg);
+int read_file(char *buffer, const size_t buffer_size, char *filename);
 
+void *analyst(void *arg);
+int parse_to_struct(char *buffer, CoreStats *cpu_stats, const unsigned short num_of_cores);
+
+void *printer(void *arg);
 
 #endif

@@ -3,40 +3,32 @@
 #include <string.h>
 #include <unistd.h>
 #include <errno.h>
-#include <err.h>
 
 #include "threads_utils.h"
 #include "ring_buffer.h"
 
-extern int errno;
-//static inline int read_file(char *buffer, const size_t buffer_size, char *filename);
+// static inline int read_file(char *buffer, const size_t buffer_size, char *filename);
 
-void *reader(void *__thread_struct)
+void *reader(void *arg)
 {
-    thread_struct *ths = (thread_struct *)__thread_struct;
-    printf("Number of cores: %d\n", ths->num_of_cores - 1);
+    ThreadStruct *thread_struct = (ThreadStruct *)arg;
+    size_t buff_size = sizeof(char) * MAX_LINE_LENGTH * (thread_struct->num_of_cores + 1);
+    ThreadedRingBuffer *th_rb = thread_struct->th_rbs[0];
 
-    int *err_num = malloc(sizeof(int));
-    *err_num = 0;
-    size_t buff_size = sizeof(char) * MAX_LINE_LENGTH * ths->num_of_cores;
     char *buffer = malloc(buff_size);
 
-    printf("buff_size: %ld \n", buff_size);
-
     while (1)
-    {   
-        *err_num = read_file(buffer, buff_size, STATS_FILENAME);
-
-        if (*err_num == ENOENT)
+    {
+        if (read_file(buffer, buff_size, STATS_FILENAME) == ENOENT)
         {
+            free(buffer);
             break;
         }
-
-        th_rb_push_back(ths->th_rb, buffer);
+        th_rb_push_back(th_rb, buffer);
         sleep(1);
     }
 
-    return (void *)err_num;
+    return NULL;
 }
 
 int read_file(char *buffer, const size_t buffer_size, char *filename)
@@ -52,7 +44,7 @@ int read_file(char *buffer, const size_t buffer_size, char *filename)
     return 0;
 }
 
-unsigned short get_num_of_cores()
+int get_num_of_cores()
 {
     unsigned short num_of_cores = 0;
     char buffer[MAX_LINE_LENGTH];
@@ -60,13 +52,16 @@ unsigned short get_num_of_cores()
     FILE *in_file = fopen(STATS_FILENAME, "r");
 
     if (in_file == NULL)
-        err(EXIT_FAILURE, "Error code: %d", ENOENT);
+    {
+        return -1;
+    }
 
     // calculating number of cores
     while (fgets(buffer, sizeof buffer, in_file))
         if (strncmp(buffer, "cpu", 3) == 0)
             num_of_cores++;
     // end calculating
+    num_of_cores--; // don't count general
     fclose(in_file);
 
     return num_of_cores;

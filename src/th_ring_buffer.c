@@ -3,38 +3,34 @@
 
 #include "th_ring_buffer.h"
 
-void th_rb_init(th_ring_buffer *th_rb, size_t max_entries, size_t data_size)
+void th_rb_init(ThreadedRingBuffer *th_rb, size_t max_entries, size_t data_size)
 {       
-    rb_init(th_rb->rb, max_entries, data_size);
-    th_rb->mutex = malloc(sizeof(pthread_mutex_t));
-    th_rb->cond = malloc(sizeof(pthread_cond_t));
-    pthread_mutex_init(th_rb->mutex, NULL);
-    pthread_cond_init(th_rb->cond, NULL);
+    rb_init(&(th_rb->rb), max_entries, data_size);
+    pthread_mutex_init(&th_rb->mutex, NULL);
+    pthread_cond_init(&th_rb->cond, NULL);
 }
 
-void th_rb_free(th_ring_buffer *th_rb)
+void th_rb_free(ThreadedRingBuffer *th_rb)
 {
-    rb_free(th_rb->rb->buffer);
-    pthread_mutex_destroy(th_rb->mutex);
-    pthread_cond_destroy(th_rb->cond);
+    rb_free(&(th_rb->rb));
+    pthread_mutex_destroy(&th_rb->mutex);
+    pthread_cond_destroy(&th_rb->cond);
 }
 
-void th_rb_push_back(th_ring_buffer *th_rb, const void *item)
+void th_rb_push_back(ThreadedRingBuffer *th_rb, const void *item)
 {      
-    pthread_mutex_lock(th_rb->mutex);
-    rb_push_back(th_rb->rb, item);
-    pthread_mutex_unlock(th_rb->mutex);
-    pthread_cond_signal(th_rb->cond);
+    pthread_mutex_lock(&th_rb->mutex);
+    rb_push_back(&th_rb->rb, item);
+    pthread_mutex_unlock(&th_rb->mutex);
+    pthread_cond_signal(&th_rb->cond);
 }
 
-void th_rb_pop_front(th_ring_buffer *th_rb, void *item)
+void th_rb_pop_front(ThreadedRingBuffer *th_rb, void *item)
 {   
-    pthread_mutex_lock(th_rb->mutex);
-
-    while (th_rb->rb->count == 0)
-    {   
-        pthread_cond_wait(th_rb->cond, th_rb->mutex);
+    pthread_mutex_lock(&th_rb->mutex);
+    while(th_rb->rb.count == 0){         
+        pthread_cond_wait(&th_rb->cond, &th_rb->mutex);
     }
-    rb_pop_front(th_rb->rb, item);
-    pthread_mutex_unlock(th_rb->mutex);
+    rb_pop_front(&th_rb->rb, item);
+    pthread_mutex_unlock(&th_rb->mutex);
 }

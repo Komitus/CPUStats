@@ -5,9 +5,8 @@
 #include "ring_buffer.h"
 
 
-int rb_init(ring_buffer *rb, size_t max_entries, size_t data_size)
+int rb_init(RingBuffer *rb, size_t max_entries, size_t data_size)
 {   
-
     rb->buffer = malloc(sizeof(char) * max_entries * data_size);
     
     if (rb->buffer == NULL)
@@ -26,7 +25,7 @@ int rb_init(ring_buffer *rb, size_t max_entries, size_t data_size)
     return 0;
 }
 
-void rb_free(ring_buffer *rb)
+void rb_free(RingBuffer *rb)
 {
     free(rb->buffer);
 }
@@ -39,9 +38,8 @@ void rb_free(ring_buffer *rb)
     [t|h|e1][e2][e3][e4]   when num of max = 4
     [t|e5][h|e2][e3][e4]
 */
-void rb_push_back(ring_buffer *rb, const void *item)
-{
-    // this method overwrite, i want to have newest elems
+void rb_push_back(RingBuffer *rb, const void *item)
+{   
     memcpy(rb->head, item, rb->data_size);
     rb->head = (char*)rb->head + rb->data_size;
     if (rb->head == rb->buffer_end)
@@ -51,7 +49,6 @@ void rb_push_back(ring_buffer *rb, const void *item)
     {
         rb->count++;
     }
-
 }
 
 /*
@@ -60,11 +57,8 @@ void rb_push_back(ring_buffer *rb, const void *item)
     [t|e3][h]
     [t|h]
 */
-int rb_pop_front(ring_buffer *rb, void *item)
+int rb_pop_front(RingBuffer *rb, void *item)
 {   
-
-    //printf("Count: %ld\n", rb->count);
-
     if (rb->count == 0)
     {
         return -1;
