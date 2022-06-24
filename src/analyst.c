@@ -10,15 +10,11 @@
 static inline void calculate_from_structs(double *cpu_loads, unsigned long long (*prev_stats)[2],
                                           const CoreStats *cpu_stats, const unsigned short num_of_cores);
 
-void *analyst(void *arg)
+void *analyst()
 {   
-    ThreadStruct *thread_struct = (ThreadStruct *)arg;
-    const unsigned short num_of_cores = thread_struct->num_of_cores;
-    assert (num_of_cores > 0 || num_of_cores < MAX_NUM_OF_CORES);
-    ThreadedRingBuffer *th_rb_for_receiving = thread_struct->th_rbs[0];
-    ThreadedRingBuffer *th_rb_for_sending = thread_struct->th_rbs[1];
-
     char *buffer = (char *)malloc(sizeof(char) * MAX_LINE_LENGTH * (num_of_cores + 1));
+    pthread_cleanup_push(clean_up_func, buffer);
+
     double to_send[num_of_cores + 1];  // use VLA bcs its small size (which I am sure about)
     CoreStats cpu_stats[num_of_cores]; // don't do stack overlfow
     unsigned long long prev_stats[num_of_cores][2];
@@ -26,21 +22,21 @@ void *analyst(void *arg)
 
     while (1)
     {
-        th_rb_pop_front(th_rb_for_receiving, buffer);
+        th_rb_pop_front(&th_rb_for_reading, buffer);
 
         if (parse_to_struct(buffer, cpu_stats, num_of_cores) == EIO)
         {
-            free(buffer);
-            break;
+           free(buffer);
+           break;
         }
 
         calculate_from_structs(to_send, prev_stats, cpu_stats, num_of_cores);
+        th_rb_push_back(&th_rb_for_printing, to_send);
+        if_job_done[ANALYST_TH_NUM]++;
 
-        th_rb_push_back(th_rb_for_sending, to_send);
     }
 
-    th_rb_free(th_rb_for_sending);
-    free(buffer);
+    pthread_cleanup_pop(1);
 
     return NULL;
 }
@@ -116,7 +112,7 @@ static inline void calculate_from_structs(double *cpu_loads, unsigned long long 
             continue;
         }
 
-        cpu_loads[i] = (10000 * (total_diff - idle_diff) / total_diff + 1) / 100.0;
+        cpu_loads[i] = (10000 * (total_diff - idle_diff) / total_diff ) / 100.0;
         cpu_loads[num_of_cores] += cpu_loads[i]; // average load
     }
 

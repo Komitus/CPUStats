@@ -3,9 +3,9 @@
 
 #include <th_ring_buffer.h>
 #include <limits.h>
+#include <stdatomic.h>
 
 #define MAX_LINE_LENGTH 128
-#define NOT_READ_CHAR 1
 #define STATS_FILENAME "/proc/stat"
 #define MAX_NUM_OF_CORES USHRT_MAX
 #define MAX_BUFF_ENTRIES 10
@@ -28,13 +28,16 @@ typedef struct CoreStats
     unsigned long long steal;
 } CoreStats;
 
+/*
 typedef struct ThreadStruct
 {
     // Or whatever information that you need
     unsigned short num_of_cores;
     ThreadedRingBuffer **th_rbs;
+    atomic_int *job_done;
 
 } ThreadStruct;
+*/
 
 /**
  * @brief Get the num of cores
@@ -50,12 +53,22 @@ int get_num_of_cores();
  * @param __thread_struct @see{ThreadStruct}
  * @return void* - communicate error if occured
  */
-void *reader(void *arg);
+void *reader();
 int read_file(char *buffer, const size_t buffer_size, char *filename);
 
-void *analyst(void *arg);
+void *analyst();
 int parse_to_struct(char *buffer, CoreStats *cpu_stats, const unsigned short num_of_cores);
 
-void *printer(void *arg);
+void *printer();
+void *watch_dog(void *arg);
+void *logger();
 
+/* global variables to init in main */
+extern int num_of_cores;
+extern atomic_int if_job_done[NUM_OF_THREADS];
+extern ThreadedRingBuffer th_rb_for_reading;
+extern ThreadedRingBuffer th_rb_for_printing;
+
+/* in watch_dog.c */
+void clean_up_func(void *arg);
 #endif

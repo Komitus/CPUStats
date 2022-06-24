@@ -29,7 +29,7 @@ void th_rb_pop_front(ThreadedRingBuffer *th_rb, void *item)
 {
     pthread_mutex_lock(&th_rb->mutex);
     while (th_rb->rb.count == 0)
-    {
+    {   
         // it waits here so i dont ready queue size endlessly
         pthread_cond_wait(&th_rb->cond, &th_rb->mutex);
     }

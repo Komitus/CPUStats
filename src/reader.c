@@ -10,12 +10,11 @@
 
 // static inline int read_file(char *buffer, const size_t buffer_size, char *filename);
 
-void *reader(void *arg)
-{
-    ThreadStruct *thread_struct = (ThreadStruct *)arg;
-    size_t buff_size = sizeof(char) * MAX_LINE_LENGTH * (thread_struct->num_of_cores + 1);
-    ThreadedRingBuffer *th_rb_for_sending = thread_struct->th_rbs[0];
+void *reader()
+{   
+    size_t buff_size = sizeof(char) * MAX_LINE_LENGTH * (num_of_cores + 1);
     char *buffer = malloc(buff_size);
+    pthread_cleanup_push(clean_up_func, buffer);
 
     while (1)
     {
@@ -24,12 +23,12 @@ void *reader(void *arg)
             free(buffer);
             break;
         }
-        th_rb_push_back(th_rb_for_sending, buffer);
+        th_rb_push_back(&th_rb_for_reading, buffer);
+        if_job_done[READER_TH_NUM]++;
         sleep(1);
     }
 
-    th_rb_free(th_rb_for_sending);
-    free(buffer);
+    pthread_cleanup_pop(1);
 
     return NULL;
 }
