@@ -12,6 +12,8 @@
         "ring_buffer.h": "c",
         "chrono": "c",
         "unistd.h": "c",
-        "threads_utils.h": "c"
+        "threads_utils.h": "c",
+        "th_ring_buffer.h": "c",
+        "random": "c"
     }
 }

@@ -1,7 +1,7 @@
 TARGET   := main.out
 
 CC       := gcc
-CFLAGS   := -std=c99 -Wall -Wextra -pthread
+CFLAGS   := -std=c99 -Wall -Wextra -pthread -g
 
 LINKER   := gcc 
 LFLAGS   := -Wall -lm -pthread

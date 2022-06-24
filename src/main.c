@@ -7,28 +7,19 @@
 
 #include "threads_utils.h"
 
-unsigned short num_of_cores;
-
-#define MAX_BUFF_ENTRIES 15
-
-#define NUM_OF_THREADS 3
-#define READER_TH_NUM 0
-#define ANALYST_TH_NUM 1
-#define PRINTER_TH_NUM 2
-
 // int argc, char *argv[]
 int main()
-{
+{   
+    
     int num_of_cores = get_num_of_cores();
 
-    if (num_of_cores <= 0)
+    if (num_of_cores <= 0 || num_of_cores > MAX_NUM_OF_CORES)
     {
-        err(EXIT_FAILURE, "Cannot get number of cores\n");
+        err(EXIT_FAILURE, "Cannot get proper number of cores\n");
     }
 
     printf("Number of cores: %d\n", num_of_cores);
 
-    // ThreadStruct thread_structs[NUM_OF_THREADS];
     ThreadStruct thread_structs[NUM_OF_THREADS];
     ThreadedRingBuffer th_rb_for_reading;
     ThreadedRingBuffer th_rb_for_printing;
@@ -70,4 +61,5 @@ int main()
 
     pthread_exit(NULL);
     return 0;
+
 }
