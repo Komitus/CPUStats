@@ -17,6 +17,8 @@
         "random": "c",
         "stdatomic.h": "c",
         "stdio.h": "c",
-        "atomic": "c"
+        "atomic": "c",
+        "cstdlib": "cpp",
+        "signal.h": "c"
     }
 }

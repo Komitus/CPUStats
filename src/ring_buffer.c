@@ -11,7 +11,6 @@ int rb_init(RingBuffer *rb, size_t max_entries, size_t data_size)
     
     if (rb->buffer == NULL)
     {   
-        free(rb);
         return 1;
     }
 
@@ -26,7 +25,8 @@ int rb_init(RingBuffer *rb, size_t max_entries, size_t data_size)
 }
 
 void rb_free(RingBuffer *rb)
-{
+{   
+
     free(rb->buffer);
 }
 

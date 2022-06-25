@@ -8,27 +8,28 @@
 #include "threads_utils.h"
 #include "ring_buffer.h"
 
-// static inline int read_file(char *buffer, const size_t buffer_size, char *filename);
+void *reader(void *arg)
+{
+    const unsigned char thread_num = *((unsigned char *)arg);
+    printf("READER THREAD NUM: %hhu\n", thread_num);
 
-void *reader()
-{   
-    size_t buff_size = sizeof(char) * MAX_LINE_LENGTH * (num_of_cores + 1);
+    const size_t buff_size = sizeof(char) * MAX_LINE_LENGTH * (g_shared_data.num_of_cores + 1);
     char *buffer = malloc(buff_size);
-    pthread_cleanup_push(clean_up_func, buffer);
 
-    while (1)
+    while (atomic_load(&g_shared_data.running[thread_num]))
     {
         if (read_file(buffer, buff_size, STATS_FILENAME) == ENOENT)
         {
             free(buffer);
             break;
         }
-        th_rb_push_back(&th_rb_for_reading, buffer);
-        if_job_done[READER_TH_NUM]++;
+        th_rb_push_back(&g_shared_data.th_rb_for_raw_data, buffer);
+        atomic_store(&g_shared_data.job_done[thread_num], 1);
         sleep(1);
     }
 
-    pthread_cleanup_pop(1);
+    free(buffer);
+    printf("EXITED READER\n");
 
     return NULL;
 }
@@ -40,16 +41,17 @@ int read_file(char *buffer, const size_t buffer_size, char *filename)
     if (in_file == NULL)
         return ENOENT;
 
-    fread(buffer, sizeof(char), buffer_size-1, in_file);
+    fread(buffer, sizeof(char), buffer_size - 1, in_file);
+    buffer[buffer_size - 1] = '\0';
     // i want \0 at the end (buffer[buff_size-1])
     fclose(in_file);
 
     return 0;
 }
 
-int get_num_of_cores()
+int get_num_of_cores(void)
 {
-    unsigned short num_of_cores = 0;
+    unsigned short cores = 0;
     char buffer[MAX_LINE_LENGTH];
 
     FILE *in_file = fopen(STATS_FILENAME, "r");
@@ -60,17 +62,17 @@ int get_num_of_cores()
     }
 
     // calculating number of cores
-    while (fgets(buffer, sizeof(char) * MAX_LINE_LENGTH-1, in_file))
-    {   
+    while (fgets(buffer, sizeof(char) * MAX_LINE_LENGTH - 1, in_file))
+    {
         if (strncmp(buffer, "cpu", 3) == 0)
         {
-            num_of_cores++;
+            cores++;
         }
     }
 
     // end calculating
-    num_of_cores--; // don't count general
+    cores--; // don't count general
     fclose(in_file);
 
-    return num_of_cores;
+    return cores;
 }

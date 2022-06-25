@@ -31,14 +31,14 @@ void rb_push_back(RingBuffer *rb, const void *item);
  * @brief Pop item from ring buffer
  * @details Valgrind is complaining about memory, bcs of using pointer,
  * important is to take care of freeing rb.buffer (rb_free func)
- * @param rb 
+ * @param rb pointer to ringbuffer
  * @param item pointer to the element to which the oldest item 
  * is to be copied
  * @return int status - return -1 if empty
  */
 int rb_pop_front(RingBuffer *rb, void *item);
 
-int test_ring_buffer_strings();
-int test_ring_buffer_uints();
+int test_ring_buffer_strings(void);
+int test_ring_buffer_uints(void);
 
 #endif

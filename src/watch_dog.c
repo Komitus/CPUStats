@@ -1,56 +1,45 @@
-#include "threads_utils.h"
 #include <stdatomic.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
 
-void *watch_dog(void *arg)
-{
-    pthread_t *threads_ids = (pthread_t *)arg;
-    static const char *THREAD_STRING[] = {
-        "reader", "analyst", "printer"};
+#include "threads_utils.h"
 
-    clock_t t[NUM_OF_THREADS];
-    for (int i = 0; i < NUM_OF_THREADS; i++)
+void *watch_dog(void *arg)
+{   
+    const unsigned char thread_num = *((unsigned char *)arg);
+    printf("WATCHDOG THREAD NUM: %hhu\n", thread_num);
+    
+    clock_t *t = malloc(sizeof(*t) * NUM_OF_OBLIGATORY_THREADS);
+
+    for (int i = 0; i < NUM_OF_OBLIGATORY_THREADS; i++)
     {
         t[i] = clock();
     }
 
-    while (1)
+    while (atomic_load(&g_shared_data.running[thread_num]))
     {
 
-        for (int i = 0; i < NUM_OF_THREADS; i++)
+        for (int i = 0; i < NUM_OF_OBLIGATORY_THREADS; i++)
         {
-            if (if_job_done[i] > 0)
+            if (atomic_load(&g_shared_data.job_done[i]))
             {
-                if_job_done[i]--;
+                atomic_store(&g_shared_data.job_done[i], 0);
                 t[i] = clock();
             }
             else
             {
-                if (clock() - t[i] > 2 * CLOCKS_PER_SEC)
-                {
-                    for (int i = 0; i < NUM_OF_THREADS; i++)
-                    {
-                        // printf("Thread id %lu\n", threads_ids[i]);
-                        pthread_cancel(threads_ids[i]);
-                    }
+                if (clock() - t[i] > 100 * CLOCKS_PER_SEC)
+                {   
                     printf("WATCH_DOG: threads cancelled, principal: %s\n", THREAD_STRING[i]);
+                    stop_all_threads(); 
+                    free(t);
                     return NULL;
                 }
             }
         }
     }
-
+    
+    free(t);
     return NULL;
-}
-
-void clean_up_func(void *arg)
-{
-    char *buffer = (char *)arg;
-    if (buffer)
-    {
-        free(buffer);
-        //printf("BUFF CLEANED\n");
-    }
 }

@@ -7,7 +7,7 @@
 #include "threads_utils.h"
 
 
-int test_ring_buffer_uints(){
+int test_ring_buffer_uints(void){
 
     const unsigned int num_of_pushes = 20000;
     const unsigned int max_entries = 1000;
@@ -39,13 +39,13 @@ int test_ring_buffer_uints(){
     return 0;
 }
 
-int test_ring_buffer_strings(){
+int test_ring_buffer_strings(void){
 
     const unsigned int num_of_pushes = 1500;
     const unsigned int num_of_pops = 400;
     const unsigned int max_entries = 1000;
 
-    unsigned short num_of_cores = get_num_of_cores(); 
+    unsigned short num_of_cores = (unsigned short)get_num_of_cores(); 
 
     RingBuffer rb;
     const size_t buff_size = sizeof(char) * MAX_LINE_LENGTH * (num_of_cores+1);
@@ -63,7 +63,7 @@ int test_ring_buffer_strings(){
     printf("Pushed %d times\n", i);
     assert(i == num_of_pushes);
 
-    CoreStats cpu_stats[num_of_cores];
+    CoreStats *cpu_stats = malloc(sizeof(*cpu_stats)*num_of_cores);
 
     for(i = 0; i< num_of_pops; i++){
         rb_pop_front(&rb, buffer);
@@ -83,6 +83,7 @@ int test_ring_buffer_strings(){
     assert(i == num_of_pops);
     printf("\nPopped %d times\n", i);
 
+    free(cpu_stats);
     rb_free(&rb);
     free(buffer);
 

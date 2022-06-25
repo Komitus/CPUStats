@@ -1,10 +1,24 @@
 TARGET   := main.out
 
-CC       := gcc
-CFLAGS   := -std=c99 -Wall -Wextra -pthread -g
+CC       := clang-9
+VALGRIND = 1
 
-LINKER   := gcc 
-LFLAGS   := -Wall -lm -pthread
+#for clang some flags bcs of POSIX
+ifeq ($(CC), gcc)
+	CFLAGS   := -Wall -Wextra -pthread
+else 
+	CFLAGS   := -Weverything -Wno-padded \
+				-Wno-reserved-id-macro -Wno-disabled-macro-expansion
+endif
+
+CFLAGS += -std=c99
+
+ifeq ($(VALGRIND), 1)
+	CFLAGS   += -g
+endif
+
+LINKER   := clang-9
+LFLAGS   := -Wall -lm -pthread 
 
 PROJECT_DIR := $(shell pwd)
 
