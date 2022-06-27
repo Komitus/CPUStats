@@ -1,7 +1,11 @@
+export
+
+.PHONY: all prepare clean remove run_test clean_tests
+
 TARGET   := main.out
 
 CC       := clang-9
-VALGRIND = 1
+IF_VALGRIND = 1
 
 #for clang some flags bcs of POSIX
 ifeq ($(CC), gcc)
@@ -13,7 +17,7 @@ endif
 
 CFLAGS += -std=c99
 
-ifeq ($(VALGRIND), 1)
+ifeq ($(IF_VALGRIND), 1)
 	CFLAGS   += -g
 endif
 
@@ -29,6 +33,8 @@ OBJDIR   := $(PROJECT_DIR)/obj
 SOURCES  := $(wildcard $(SRCDIR)/*.c)
 OBJECTS  := $(SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o)
 HEADERS  := $(foreach d, $(INCDIR), -I$d)
+TESTS_DIR := $(PROJECT_DIR)/tests
+TEST_TARGET := tests.out
 
 VERBOSE = 0
 
@@ -44,7 +50,7 @@ endef
 
 # Was trying to do multiple folders but i ended up having many Makefiles
 
-all: $(BINDIR)/$(TARGET)
+all: prepare $(BINDIR)/$(TARGET)
 
 $(BINDIR)/$(TARGET): $(OBJECTS)
 	$(call print_info,LINK, $<)
@@ -54,6 +60,9 @@ $(OBJECTS): $(OBJDIR)/%.o : $(SRCDIR)/%.c
 	$(Q)$(CC) $(HEADERS) $(CFLAGS) -c $< -o $@
 	$(call print_info,OBJ, $@)
 
+prepare:
+	$(Q)mkdir -p $(OBJDIR) && mkdir -p $(BINDIR)
+
 clean:
 	$(Q)echo CLEANING
 	$(Q)$(RM) $(wildcard $(OBJDIR)/*.o)
@@ -62,5 +71,17 @@ remove: clean
 	$(Q)$(RM) $(BINDIR)/$(TARGET)
 
 
+mem_test_main:
+	$(Q)$(MAKE) -f $(PROJECT_DIR)/Makefile all --no-print-directory
+	$(Q)valgrind --leak-check=full $(BINDIR)/$(TARGET)
+
+# not elegant solution
 run_test:
-	$(MAKE) -f $(PROJECT_DIR)/Makefile --no-print-directory
+	$(Q)$(MAKE) -f $(PROJECT_DIR)/Makefile all --no-print-directory
+	$(Q)mv $(OBJDIR)/main.o $(OBJDIR)/main_backup
+	$(Q)$(MAKE) -f $(TESTS_DIR)/Makefile --no-print-directory
+	$(Q)mv $(OBJDIR)/main_backup $(OBJDIR)/main.o
+	$(Q)valgrind --leak-check=full $(TESTS_DIR)/$(TEST_TARGET)
+
+clean_tests:
+	$(Q)$(MAKE) -f $(TESTS_DIR)/Makefile clean --no-print-directory

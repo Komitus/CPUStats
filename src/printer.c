@@ -6,10 +6,9 @@
 #include "threads_utils.h"
 
 void *printer(void *arg)
-{
+{   
+    MY_LOG("STARTED PRINTER");
     const unsigned char thread_num = *((unsigned char *)arg);
-    printf("PRINTER THREAD NUM: %hhu\n", thread_num);
-
     const unsigned short num_of_cores = g_shared_data.num_of_cores;
     char *buffer = malloc(sizeof(char) * PRINT_LINE_LENGTH * (unsigned long)(num_of_cores + 1));
     double *received = malloc(sizeof(*received) * (num_of_cores + 1));
@@ -26,19 +25,18 @@ void *printer(void *arg)
         {
             sprintf(buffer + strlen(buffer), "Core[%d]: %3.2lf %%\n", i, received[i]);
         }
+#ifndef LOGGER_ON
         fprintf(stdout, "%s", buffer);
-
-        pthread_mutex_lock(&g_shared_data.time_mutex);
-        g_shared_data.last_time_active = clock();
-        pthread_mutex_unlock(&g_shared_data.time_mutex);
-        pthread_cond_signal(&g_shared_data.time_cond);
-
+#endif
+        MY_LOG("PRINTER PRINTED");
+        atomic_store(&g_shared_data.job_done[thread_num], 1);
+        
         sleep(1);
     }
 
     free(buffer);
     free(received);
+    MY_LOG("EXIT PRINTER");
 
-    printf("EXITED PRINTER\n");
     return NULL;
 }

@@ -12,9 +12,8 @@ static inline void calculate_from_structs(double *cpu_loads, unsigned int *prev_
 
 void *analyst(void *arg)
 {
+    MY_LOG("STARTED ANALYST");
     const unsigned char thread_num = *((unsigned char *)arg);
-    printf("ANALYST THREAD NUM: %hhu\n", thread_num);
-
     const unsigned short num_of_cores = g_shared_data.num_of_cores;
     const size_t raw_text_size = sizeof(char) * MAX_LINE_LENGTH * ((unsigned long)num_of_cores + 1);
     char *buffer = (char *)malloc(raw_text_size);
@@ -31,21 +30,18 @@ void *analyst(void *arg)
         {
             break;
         }
-
+        MY_LOG("ANALYST POPPED");
         if (parse_to_struct(buffer, cpu_stats, num_of_cores) == EIO)
         {
             free(buffer);
             break;
         }
-    
+
         calculate_from_structs(calculated_values, prev_stats, cpu_stats, num_of_cores);
         th_rb_push_back(&g_shared_data.th_rb_for_calculated_data, calculated_values);
-        
-        pthread_mutex_lock(&g_shared_data.time_mutex);
-        g_shared_data.last_time_active = clock();
-        pthread_mutex_unlock(&g_shared_data.time_mutex);
-        pthread_cond_signal(&g_shared_data.time_cond);
-        
+        MY_LOG("ANALYST PUSHED");
+        atomic_store(&g_shared_data.job_done[thread_num], 1);
+
     }
 
     free(buffer);
@@ -53,7 +49,7 @@ void *analyst(void *arg)
     free(cpu_stats);
     free(prev_stats);
 
-    printf("EXITED ANALYST\n");
+    MY_LOG("EXIT ANALYST");
 
     return NULL;
 }

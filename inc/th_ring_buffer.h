@@ -26,6 +26,12 @@ void th_rb_init(ThreadedRingBuffer *th_rb, size_t max_entries, size_t data_size)
 void th_rb_free(ThreadedRingBuffer *th_rb);
 void th_rb_push_back(ThreadedRingBuffer *th_rb, const void *item);
 int th_rb_pop_front(ThreadedRingBuffer *th_rb, void *item, atomic_bool *running);
+/**
+ * @brief this function is necessary when program is exiting and th_rb_pop_front 
+ * is freezed on cond_wait, it just sends signal to cond member of th_rb
+ * 
+ * @param th_rb ptr to ThreadedRingBuffer
+ */
 void th_rb_interrupt_signal(ThreadedRingBuffer *th_rb);
 
 #endif

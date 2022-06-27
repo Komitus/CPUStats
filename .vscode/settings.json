@@ -19,6 +19,7 @@
         "stdio.h": "c",
         "atomic": "c",
         "cstdlib": "cpp",
-        "signal.h": "c"
+        "signal.h": "c",
+        "tests_header.h": "c"
     }
 }

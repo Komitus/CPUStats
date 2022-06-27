@@ -26,7 +26,7 @@ void th_rb_push_back(ThreadedRingBuffer *th_rb, const void *item)
 }
 
 int th_rb_pop_front(ThreadedRingBuffer *th_rb, void *item, atomic_bool *running)
-{
+{   
     pthread_mutex_lock(&th_rb->mutex);
     while (th_rb->rb.count == 0)
     {   
