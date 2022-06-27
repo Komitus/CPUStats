@@ -21,6 +21,6 @@ Is singleton approach implemented this way ok: https://github.com/Kukos/OOP-in-C
 <li> If atomic_bools are ok for stopping threads. I had previos version using pthread_cancel. I have heard that's bad but in my case it could be ok, bcs I have many cancellation points in functions given to threads.
 According to cancelling threads. I don't have in the final approach push_clean_up_handler bcs I free memory after exiting loop, and if I had to do this handler, I had to have many struct of pointers to variables local to stack or make this variables global to bee seen from this handlers.
 <li> I know I have bad Makefile approach. Should I have separate folders for every module and separete Makefile in it?
-Smth like here: https://github.com/Kukos/MyLibs But there is no separate obj folder and eveyr folder have only one source file, and each folder makes up a library, not executable.
+Smth like here: https://github.com/Kukos/MyLibs But there is no separate obj folder and every folder have only one source file, and each folder makes up a library, not executable.
 <li> Previous implementations of watchdogs (but very accurate) was taking too much CPU resources so I switched to poor version of doing sleep in watchdog thread.
 </ol>
