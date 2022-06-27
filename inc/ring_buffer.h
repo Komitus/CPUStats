@@ -38,7 +38,4 @@ void rb_push_back(RingBuffer *rb, const void *item);
  */
 int rb_pop_front(RingBuffer *rb, void *item);
 
-int test_ring_buffer_strings(void);
-int test_ring_buffer_uints(void);
-
 #endif

@@ -37,10 +37,15 @@ void *analyst(void *arg)
             free(buffer);
             break;
         }
-
+    
         calculate_from_structs(calculated_values, prev_stats, cpu_stats, num_of_cores);
         th_rb_push_back(&g_shared_data.th_rb_for_calculated_data, calculated_values);
-        atomic_store(&g_shared_data.job_done[thread_num], 1);
+        
+        pthread_mutex_lock(&g_shared_data.time_mutex);
+        g_shared_data.last_time_active = clock();
+        pthread_mutex_unlock(&g_shared_data.time_mutex);
+        pthread_cond_signal(&g_shared_data.time_cond);
+        
     }
 
     free(buffer);

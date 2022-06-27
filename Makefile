@@ -17,7 +17,7 @@ ifeq ($(VALGRIND), 1)
 	CFLAGS   += -g
 endif
 
-LINKER   := clang-9
+LINKER   := $(CC)
 LFLAGS   := -Wall -lm -pthread 
 
 PROJECT_DIR := $(shell pwd)
@@ -60,3 +60,7 @@ clean:
 
 remove: clean
 	$(Q)$(RM) $(BINDIR)/$(TARGET)
+
+
+run_test:
+	$(MAKE) -f $(PROJECT_DIR)/Makefile --no-print-directory

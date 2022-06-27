@@ -9,15 +9,18 @@
 
 int main()
 {   
-    struct sigaction sa;
-    memset(&sa, 0, sizeof(struct sigaction));
-    sa.sa_handler = &handle_sig_term;
-    sigaction(SIGTERM, &sa, NULL);
+    struct sigaction sa_term;
+    memset(&sa_term, 0, sizeof(struct sigaction));
+    sa_term.sa_handler = &handle_sig_term;
+    sigaction(SIGTERM, &sa_term, NULL);
+    sigaction(SIGINT, &sa_term, NULL);
     
     init_shared_data();
     start_all_threads();
     join_all_threads();
     free_shared_data();
+
+    printf("GOOD BYE!\n");
 
     return 0;
 }

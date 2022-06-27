@@ -31,6 +31,7 @@ int th_rb_pop_front(ThreadedRingBuffer *th_rb, void *item, atomic_bool *running)
     while (th_rb->rb.count == 0)
     {   
         if(atomic_load(running) == 0){
+            pthread_mutex_unlock(&th_rb->mutex);
             return 1;
         }
         // it waits here so i dont ready queue size endlessly

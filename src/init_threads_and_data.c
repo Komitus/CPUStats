@@ -18,7 +18,6 @@ static void *(*functions[NUM_OF_THREADS])(void *) = {
 
 void init_shared_data(void)
 {
-
     int num_of_cores = get_num_of_cores();
 
     if (num_of_cores <= 0 || num_of_cores > MAX_NUM_OF_CORES)
@@ -30,11 +29,15 @@ void init_shared_data(void)
     printf("Number of cores: %d\n", num_of_cores);
     g_shared_data.num_of_cores = (unsigned short)num_of_cores;
 
-    for (unsigned char i = 0; i < NUM_OF_THREADS; i++)
+    for (int i = 0; i < NUM_OF_THREADS; i++)
     {   
         atomic_store(&g_shared_data.running[i], 1);
-        atomic_store(&g_shared_data.job_done[i], 0);
     }
+
+    pthread_mutex_init(&g_shared_data.time_mutex, NULL);
+    pthread_cond_init(&g_shared_data.time_cond, NULL);
+
+    g_shared_data.last_time_active = clock();
 
     size_t raw_text_size = sizeof(char) * MAX_LINE_LENGTH * ((unsigned long)num_of_cores + 1);
     size_t calculated_values_size = sizeof(double) * ((unsigned long)num_of_cores + 1);
@@ -47,6 +50,8 @@ void free_shared_data(void)
 {
     th_rb_free(&g_shared_data.th_rb_for_raw_data);
     th_rb_free(&g_shared_data.th_rb_for_calculated_data);
+    pthread_mutex_destroy(&g_shared_data.time_mutex);
+    pthread_cond_destroy(&g_shared_data.time_cond);
 }
 
 void start_all_threads(void)
@@ -56,7 +61,7 @@ void start_all_threads(void)
         threads_ids[i] = i;
         if (pthread_create(&thread_init_threads[i], NULL, functions[i], &threads_ids[i]) != 0)
         {
-            fprintf(stderr, "Error while creating thread %s\n", THREAD_STRING[i]);
+            err(EXIT_FAILURE, "Error while creating thread %s\n", THREAD_STRING[i]);
         }
     }
 }
@@ -85,7 +90,6 @@ void stop_all_threads(void)
 
 void handle_sig_term(int signum)
 {
-    fprintf(stderr, "Exited by signal nr: %d\n", signum);
+    UNUSED(signum);
     stop_all_threads();
 }
-

@@ -11,7 +11,7 @@
 #define MAX_LINE_LENGTH 128
 #define STATS_FILENAME "/proc/stat"
 #define MAX_NUM_OF_CORES USHRT_MAX
-#define MAX_BUFF_ENTRIES 10
+#define MAX_BUFF_ENTRIES 5
 
 #define NUM_OF_OBLIGATORY_THREADS 3
 #define NUM_OF_THREADS 4
@@ -33,11 +33,12 @@ typedef struct SharedData
 {
     ThreadedRingBuffer th_rb_for_raw_data;
     ThreadedRingBuffer th_rb_for_calculated_data;
-    atomic_bool job_done[NUM_OF_THREADS];
     atomic_bool running[NUM_OF_THREADS];
-    unsigned char threads_nums[NUM_OF_THREADS];
+    time_t last_time_active;
+    pthread_cond_t time_cond;
+    pthread_mutex_t time_mutex;
     unsigned short num_of_cores;
-
+    
 } SharedData;
 
 /**
@@ -74,6 +75,7 @@ void start_all_threads(void);
 void join_all_threads(void);
 void stop_all_threads(void);
 void handle_sig_term(int signum);
+void handle_sig_int(int signum);
 
 
 #endif

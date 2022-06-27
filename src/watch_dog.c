@@ -2,44 +2,36 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
-
 #include "threads_utils.h"
 
 void *watch_dog(void *arg)
-{   
+{
     const unsigned char thread_num = *((unsigned char *)arg);
+    struct timespec ts;
     printf("WATCHDOG THREAD NUM: %hhu\n", thread_num);
-    
-    clock_t *t = malloc(sizeof(*t) * NUM_OF_OBLIGATORY_THREADS);
 
-    for (int i = 0; i < NUM_OF_OBLIGATORY_THREADS; i++)
-    {
-        t[i] = clock();
-    }
+    ts.tv_nsec = 0;
+    ts.tv_sec = 2;
 
+
+    // mutex and cond version takes less resources (cpu % 18 contrary to previous 27%)
     while (atomic_load(&g_shared_data.running[thread_num]))
     {
+        pthread_mutex_lock(&g_shared_data.time_mutex);
+        pthread_cond_timedwait(&g_shared_data.time_cond,
+                               &g_shared_data.time_mutex, &ts);
 
-        for (int i = 0; i < NUM_OF_OBLIGATORY_THREADS; i++)
+        // printf("WATCH: %ld\n", g_shared_data.last_time_active);
+        if (clock() - g_shared_data.last_time_active > ts.tv_sec * CLOCKS_PER_SEC)
         {
-            if (atomic_load(&g_shared_data.job_done[i]))
-            {
-                atomic_store(&g_shared_data.job_done[i], 0);
-                t[i] = clock();
-            }
-            else
-            {
-                if (clock() - t[i] > 100 * CLOCKS_PER_SEC)
-                {   
-                    printf("WATCH_DOG: threads cancelled, principal: %s\n", THREAD_STRING[i]);
-                    stop_all_threads(); 
-                    free(t);
-                    return NULL;
-                }
-            }
+            pthread_mutex_unlock(&g_shared_data.time_mutex);
+            break;
         }
+        pthread_mutex_unlock(&g_shared_data.time_mutex);
     }
-    
-    free(t);
+
+    stop_all_threads();
+    printf("WATCH_DOG: threads stopped\n");
+
     return NULL;
 }

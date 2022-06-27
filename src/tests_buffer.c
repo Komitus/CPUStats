@@ -6,8 +6,20 @@
 
 #include "threads_utils.h"
 
+static int unit_test_ring_buffer_uints(void);
+static int test_read_file_parse_with_rb(void);
 
-int test_ring_buffer_uints(void){
+/*
+int main(){
+
+    assert(unit_test_ring_buffer_uints() == 0);
+    assert(test_read_file_parse_with_rb() == 0);
+
+    return 0;
+}
+*/
+
+static int unit_test_ring_buffer_uints(void){
 
     const unsigned int num_of_pushes = 20000;
     const unsigned int max_entries = 1000;
@@ -39,7 +51,7 @@ int test_ring_buffer_uints(void){
     return 0;
 }
 
-int test_ring_buffer_strings(void){
+static int test_read_file_parse_with_rb(void){
 
     const unsigned int num_of_pushes = 1500;
     const unsigned int num_of_pops = 400;
@@ -89,3 +101,5 @@ int test_ring_buffer_strings(void){
 
     return 0;
 }
+
+

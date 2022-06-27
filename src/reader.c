@@ -24,7 +24,12 @@ void *reader(void *arg)
             break;
         }
         th_rb_push_back(&g_shared_data.th_rb_for_raw_data, buffer);
-        atomic_store(&g_shared_data.job_done[thread_num], 1);
+        
+        pthread_mutex_lock(&g_shared_data.time_mutex);
+        g_shared_data.last_time_active = clock();
+        pthread_mutex_unlock(&g_shared_data.time_mutex);
+        pthread_cond_signal(&g_shared_data.time_cond);
+
         sleep(1);
     }
 
