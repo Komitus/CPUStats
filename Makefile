@@ -1,6 +1,6 @@
 export
 
-.PHONY: all prepare clean remove run_test clean_tests
+.PHONY: all prepare clean remove test clean_tests
 
 TARGET   := main.out
 
@@ -76,7 +76,7 @@ mem_test_main:
 	$(Q)valgrind --leak-check=full $(BINDIR)/$(TARGET)
 
 # not elegant solution
-run_test:
+test:
 	$(Q)$(MAKE) -f $(PROJECT_DIR)/Makefile all --no-print-directory
 	$(Q)mv $(OBJDIR)/main.o $(OBJDIR)/main_backup
 	$(Q)$(MAKE) -f $(TESTS_DIR)/Makefile --no-print-directory
